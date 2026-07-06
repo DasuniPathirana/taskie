@@ -7,14 +7,16 @@ import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProjectDetail({ params }: { params: { id: string } }) {
+export default async function ProjectDetail({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
   
   const userId = session.user.id;
+  const resolvedParams = await params;
+  const projectId = resolvedParams.id;
 
   const project = await db.project.findUnique({
-    where: { id: params.id },
+    where: { id: projectId },
     include: {
       members: {
         include: { user: true }
