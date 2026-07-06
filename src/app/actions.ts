@@ -85,12 +85,16 @@ export async function inviteUserToProject(projectId: string, email: string) {
   return { success: true };
 }
 
-export async function createTask(projectId: string, formData: FormData) {
+export async function handleCreateTask(projectId: string, formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const assigneeId = formData.get('assigneeId') as string;
+  const startDateStr = formData.get('startDate') as string;
+  const endDateStr = formData.get('endDate') as string;
+  const estimatedHoursStr = formData.get('estimatedHours') as string;
 
   if (!title) throw new Error('Task title is required');
 
@@ -98,8 +102,12 @@ export async function createTask(projectId: string, formData: FormData) {
     data: {
       projectId,
       title,
-      description,
-      status: 'Todo',
+      description: description || null,
+      assigneeId: assigneeId || null,
+      startDate: startDateStr ? new Date(startDateStr) : null,
+      endDate: endDateStr ? new Date(endDateStr) : null,
+      estimatedHours: estimatedHoursStr ? parseFloat(estimatedHoursStr) : null,
+      status: 'New',
       progress: 0,
       timeSpent: 0
     }
@@ -108,7 +116,7 @@ export async function createTask(projectId: string, formData: FormData) {
   revalidatePath(`/projects/${projectId}`);
 }
 
-export async function updateTaskStatus(taskId: string, status: string, projectId: string) {
+export async function handleUpdateTaskStatus(taskId: string, status: string, projectId: string) {
   await db.task.update({
     where: { id: taskId },
     data: { 
@@ -142,7 +150,7 @@ export async function assignTask(taskId: string, assigneeId: string, projectId: 
   revalidatePath(`/projects/${projectId}`);
 }
 
-export async function deleteTask(taskId: string, projectId: string) {
+export async function handleDeleteTask(taskId: string, projectId: string) {
   await db.task.delete({
     where: { id: taskId }
   });
