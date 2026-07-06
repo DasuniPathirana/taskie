@@ -1,66 +1,111 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { db } from '@/lib/db';
+import Link from 'next/link';
+import { Folder, Clock, CheckCircle, BarChart3, Plus } from 'lucide-react';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Dashboard() {
+  const projectsCount = await db.project.count();
+  const tasksCount = await db.task.count();
+  const completedTasks = await db.task.count({ where: { status: 'Done' } });
+  
+  const recentProjects = await db.project.findMany({
+    take: 3,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      tasks: true,
+    }
+  });
+
+  const progress = tasksCount > 0 ? Math.round((completedTasks / tasksCount) * 100) : 0;
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Welcome back! Here's your overview.</p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <Link href="/projects/new" className="btn-primary">
+          <Plus size={18} />
+          New Project
+        </Link>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="flex-center" style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>
+            <Folder size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>Total Projects</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{projectsCount}</div>
+          </div>
         </div>
-      </main>
+
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="flex-center" style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+            <CheckCircle size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>Tasks Completed</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{completedTasks} / {tasksCount}</div>
+          </div>
+        </div>
+
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="flex-center" style={{ width: 48, height: 48, borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>
+            <BarChart3 size={24} />
+          </div>
+          <div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>Overall Progress</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{progress}%</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '16px' }}>Recent Projects</h2>
+      
+      {recentProjects.length === 0 ? (
+        <div className="glass-panel flex-center" style={{ padding: '48px', flexDirection: 'column', color: 'var(--text-tertiary)' }}>
+          <Folder size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+          <p>No projects found. Create your first one!</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          {recentProjects.map(project => {
+            const projectTasks = project.tasks.length;
+            const projectCompletedTasks = project.tasks.filter(t => t.status === 'Done').length;
+            const pProgress = projectTasks > 0 ? Math.round((projectCompletedTasks / projectTasks) * 100) : 0;
+            
+            return (
+              <Link href={`/projects/${project.id}`} key={project.id}>
+                <div className="glass-panel" style={{ padding: '24px', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}>
+                  <div className="flex-between" style={{ marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>{project.name}</h3>
+                    <span className={`badge ${project.status === 'Active' ? 'badge-primary' : 'badge-success'}`}>
+                      {project.status}
+                    </span>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {project.description || 'No description provided.'}
+                  </p>
+                  
+                  <div>
+                    <div className="flex-between" style={{ marginBottom: '8px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      <span>Progress</span>
+                      <span>{pProgress}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pProgress}%`, height: '100%', background: 'var(--primary)', borderRadius: '4px', transition: 'width 0.5s ease-out' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
     </div>
   );
 }
