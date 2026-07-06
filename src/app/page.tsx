@@ -100,7 +100,7 @@ export default async function Dashboard() {
           <p>No projects found. Create your first one!</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
           {recentProjects.map(project => {
             const projectTasks = project.tasks.length;
             const projectCompletedTasks = project.tasks.filter(t => t.status === 'Done').length;

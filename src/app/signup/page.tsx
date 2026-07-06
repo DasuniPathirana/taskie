@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserPlus } from 'lucide-react';
-import { registerUser } from '../auth-actions';
 import { signIn } from 'next-auth/react';
 
 export default function Signup() {
@@ -21,92 +20,98 @@ export default function Signup() {
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('password', password);
-      
-      await registerUser(formData);
-
-      // Auto login after signup
-      const res = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
       });
 
-      if (res?.error) {
-        setError('Registered successfully, but failed to auto-login. Please login manually.');
+      if (res.ok) {
+        // Auto sign in after registration
+        const signInRes = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        });
+
+        if (signInRes?.error) {
+          setError('Registration successful, but auto-login failed. Please sign in manually.');
+        } else {
+          router.push('/');
+          router.refresh();
+        }
       } else {
-        router.push('/');
-        router.refresh();
+        const data = await res.json();
+        setError(data.error || 'Registration failed');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during registration.');
+    } catch (err) {
+      setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex-center" style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '40px 32px' }}>
-        <div className="flex-center" style={{ flexDirection: 'column', marginBottom: '32px' }}>
-          <div className="flex-center" style={{ width: 48, height: 48, borderRadius: '12px', background: 'var(--success)', color: 'white', marginBottom: '16px' }}>
-            <UserPlus size={24} />
+    <div className="auth-container animate-fade-in">
+      <div className="auth-card">
+        <div className="flex-center" style={{ flexDirection: 'column', marginBottom: '40px' }}>
+          <div className="flex-center" style={{ width: 56, height: 56, borderRadius: '16px', background: 'var(--primary)', color: 'white', marginBottom: '24px', boxShadow: '0 8px 16px -4px var(--primary-glow)' }}>
+            <UserPlus size={28} />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>Create an account</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>Join Taskie to manage your projects</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Create an account</h1>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '8px', fontSize: '1rem' }}>Get started with Taskie for free</p>
         </div>
 
         {error && (
-          <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '8px', marginBottom: '24px', fontSize: '0.875rem' }}>
+          <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '12px', marginBottom: '24px', fontSize: '0.875rem', fontWeight: 500, textAlign: 'center' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Full Name</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Full Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
-              placeholder="John Doe"
+              className="auth-input input-field"
+              placeholder="Jane Doe"
+              style={{ width: '100%', fontSize: '1rem' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Email Address</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
-              placeholder="you@example.com"
+              className="auth-input input-field"
+              placeholder="name@company.com"
+              style={{ width: '100%', fontSize: '1rem' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Password</label>
             <input
               type="password"
               required
-              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
-              placeholder="••••••••"
+              className="auth-input input-field"
+              placeholder="Create a strong password"
+              style={{ width: '100%', fontSize: '1rem', letterSpacing: password ? '0.2em' : 'normal' }}
             />
           </div>
-          <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '8px', opacity: isLoading ? 0.7 : 1 }}>
-            {isLoading ? 'Creating account...' : 'Sign Up'}
+          <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '16px', padding: '14px', fontSize: '1rem', fontWeight: 600, opacity: isLoading ? 0.7 : 1 }}>
+            {isLoading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Already have an account? <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 500, textDecoration: 'none' }}>Sign in</Link>
+        <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Already have an account? <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', marginLeft: '4px' }}>Sign in</Link>
         </p>
       </div>
     </div>

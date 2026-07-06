@@ -39,52 +39,54 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-center" style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '40px 32px' }}>
-        <div className="flex-center" style={{ flexDirection: 'column', marginBottom: '32px' }}>
-          <div className="flex-center" style={{ width: 48, height: 48, borderRadius: '12px', background: 'var(--primary)', color: 'white', marginBottom: '16px' }}>
-            <LogIn size={24} />
+    <div className="auth-container animate-fade-in">
+      <div className="auth-card">
+        <div className="flex-center" style={{ flexDirection: 'column', marginBottom: '40px' }}>
+          <div className="flex-center" style={{ width: 56, height: 56, borderRadius: '16px', background: 'var(--primary)', color: 'white', marginBottom: '24px', boxShadow: '0 8px 16px -4px var(--primary-glow)' }}>
+            <LogIn size={28} />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>Welcome back</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>Sign in to access your projects</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Welcome back</h1>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '8px', fontSize: '1rem' }}>Sign in to access your workspaces</p>
         </div>
 
         {error && (
-          <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '8px', marginBottom: '24px', fontSize: '0.875rem' }}>
+          <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '12px', marginBottom: '24px', fontSize: '0.875rem', fontWeight: 500, textAlign: 'center' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Email Address</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
-              placeholder="you@example.com"
+              className="auth-input input-field"
+              placeholder="name@company.com"
+              style={{ width: '100%', fontSize: '1rem' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
+              className="auth-input input-field"
               placeholder="••••••••"
+              style={{ width: '100%', fontSize: '1rem', letterSpacing: password ? '0.2em' : 'normal' }}
             />
           </div>
-          <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '8px', opacity: isLoading ? 0.7 : 1 }}>
+          <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '16px', padding: '14px', fontSize: '1rem', fontWeight: 600, opacity: isLoading ? 0.7 : 1 }}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Don't have an account? <Link href="/signup" style={{ color: 'var(--primary)', fontWeight: 500, textDecoration: 'none' }}>Sign up</Link>
+        <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Don't have an account? <Link href="/signup" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', marginLeft: '4px' }}>Sign up</Link>
         </p>
       </div>
     </div>

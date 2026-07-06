@@ -59,7 +59,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', marginBottom: '32px' }}>
+      <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', marginBottom: '32px' }}>
         {/* Left Column: Tasks */}
         <div className="glass-panel" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '16px' }}>Add New Task</h3>

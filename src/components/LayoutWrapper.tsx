@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User, Menu, X } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { signOut } from 'next-auth/react';
 
@@ -11,6 +11,12 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   // Don't show sidebar/topbar on login or signup pages
   if (pathname === '/login' || pathname === '/signup') {
@@ -28,12 +34,25 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
 
   return (
     <div className="app-container animate-fade-in">
-      <aside className="sidebar">
-        <div className="sidebar-logo">
-          <div className="flex-center" style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8, color: '#fff' }}>
-            <CheckSquare size={20} />
+      <div 
+        className={`mobile-overlay ${sidebarOpen ? 'open' : ''}`} 
+        onClick={() => setSidebarOpen(false)}
+      />
+      
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="flex-between" style={{ padding: '0 24px', marginBottom: '32px' }}>
+          <div className="sidebar-logo" style={{ padding: 0, margin: 0 }}>
+            <div className="flex-center" style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8, color: '#fff' }}>
+              <CheckSquare size={20} />
+            </div>
+            Taskie
           </div>
-          Taskie
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={24} />
+          </button>
         </div>
         
         <nav className="sidebar-nav">
@@ -53,7 +72,14 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
       
       <main className="main-content">
         <header className="topbar">
-          <div></div>
+          <div className="flex-center" style={{ gap: '12px' }}>
+            <button 
+              className="mobile-menu-btn" 
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+          </div>
           <div className="flex-center" style={{ gap: '16px' }}>
             <button onClick={toggleTheme} className="flex-center" style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
