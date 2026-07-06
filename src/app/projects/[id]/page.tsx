@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, Users, UserPlus, Calendar, Clock } from 'lucide-react';
 import { handleCreateTask, handleUpdateTaskStatus, handleDeleteTask, handleInviteUser, handleAssignTask } from '@/app/actions';
 import { auth } from '@/auth';
+import AssigneeSelect from '@/components/AssigneeSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -203,18 +204,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
                       <div style={{ marginBottom: '12px' }}>
                         <form action={handleAssignTask.bind(null, task.id, project.id)}>
-                          <select 
-                            name="assigneeId" 
-                            defaultValue={task.assigneeId || ''}
-                            onChange={(e) => e.target.form?.requestSubmit()}
-                            className="input-field"
-                            style={{ padding: '6px 8px', fontSize: '0.75rem', height: 'auto', background: 'var(--bg-base)' }}
-                          >
-                            <option value="">Unassigned</option>
-                            {project.members.map(m => (
-                              <option key={m.userId} value={m.userId}>{m.user.name}</option>
-                            ))}
-                          </select>
+                          <AssigneeSelect defaultValue={task.assigneeId || ''} members={project.members} />
                         </form>
                       </div>
                       
