@@ -162,3 +162,17 @@ export async function deleteProject(projectId: string) {
   revalidatePath('/admin');
   revalidatePath('/');
 }
+
+export async function handleInviteUser(projectId: string, formData: FormData) {
+  const email = formData.get('email') as string;
+  if (email) {
+    await inviteUserToProject(projectId, email);
+  }
+}
+
+export async function handleAssignTask(taskId: string, projectId: string, formData: FormData) {
+  const assigneeId = formData.get('assigneeId') as string;
+  if (assigneeId) {
+    await assignTask(taskId, assigneeId, projectId);
+  }
+}

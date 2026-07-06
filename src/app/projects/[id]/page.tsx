@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, Users, UserPlus } from 'lucide-react';
-import { createTask, updateTaskStatus, deleteTask, inviteUserToProject, assignTask } from '@/app/actions';
+import { createTask, updateTaskStatus, deleteTask, handleInviteUser, handleAssignTask } from '@/app/actions';
 import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
@@ -110,11 +110,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
           </div>
 
           {isOwnerOrAdmin && (
-            <form action={async (formData) => {
-              'use server';
-              const email = formData.get('email') as string;
-              if (email) await inviteUserToProject(project.id, email);
-            }} style={{ display: 'flex', gap: '8px' }}>
+            <form action={handleInviteUser.bind(null, project.id)} style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="email" 
                 name="email" 
@@ -157,11 +153,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                       )}
 
                       <div style={{ marginBottom: '12px' }}>
-                        <form action={async (formData) => {
-                          'use server';
-                          const assigneeId = formData.get('assigneeId') as string;
-                          if (assigneeId) await assignTask(task.id, assigneeId, project.id);
-                        }}>
+                        <form action={handleAssignTask.bind(null, task.id, project.id)}>
                           <select 
                             name="assigneeId" 
                             defaultValue={task.assigneeId || ''}
