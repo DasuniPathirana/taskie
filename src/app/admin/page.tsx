@@ -101,7 +101,7 @@ export default async function AdminDashboard() {
                             {project.status}
                           </span>
                           <form action={deleteProject.bind(null, project.id)}>
-                            <button type="submit" style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                            <button type="submit" style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}>
                               <Trash2 size={16} />
                             </button>
                           </form>
