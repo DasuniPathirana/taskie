@@ -1,11 +1,13 @@
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-  return new PrismaClient(
-    process.env.DATABASE_URL 
-      ? { datasources: { db: { url: process.env.DATABASE_URL } } } 
-      : undefined
-  )
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: "postgresql://postgres:TaskieDb%40123@db.logcqwpaortqsvwrdcpe.supabase.co:5432/postgres",
+      },
+    },
+  })
 }
 
 declare global {
