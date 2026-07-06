@@ -1,35 +1,63 @@
 import { db } from '@/lib/db';
 import Link from 'next/link';
-import { Folder, Clock, CheckCircle, BarChart3, Plus } from 'lucide-react';
+import { Folder, Clock, CheckCircle, BarChart3, Plus, Settings } from 'lucide-react';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
-  const projectsCount = await db.project.count();
-  const tasksCount = await db.task.count();
-  const completedTasks = await db.task.count({ where: { status: 'Done' } });
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
   
-  const recentProjects = await db.project.findMany({
-    take: 3,
+  const userId = session.user.id;
+  const isAdmin = session.user.role === 'Admin';
+
+  const userProjects = await db.project.findMany({
+    where: {
+      members: {
+        some: { userId }
+      }
+    },
     orderBy: { createdAt: 'desc' },
     include: {
       tasks: true,
     }
   });
 
+  const projectsCount = userProjects.length;
+  
+  let tasksCount = 0;
+  let completedTasks = 0;
+  
+  userProjects.forEach(project => {
+    tasksCount += project.tasks.length;
+    completedTasks += project.tasks.filter(t => t.status === 'Done').length;
+  });
+
   const progress = tasksCount > 0 ? Math.round((completedTasks / tasksCount) * 100) : 0;
+  
+  const recentProjects = userProjects.slice(0, 3);
 
   return (
     <div className="animate-fade-in">
       <div className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Welcome back! Here's your overview.</p>
+          <p className="page-subtitle">Welcome back, {session.user.name || 'User'}! Here's your overview.</p>
         </div>
-        <Link href="/projects/new" className="btn-primary">
-          <Plus size={18} />
-          New Project
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {isAdmin && (
+            <Link href="/admin" className="btn-secondary" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', fontWeight: 600, textDecoration: 'none' }}>
+              <Settings size={18} />
+              Super Admin
+            </Link>
+          )}
+          <Link href="/projects/new" className="btn-primary">
+            <Plus size={18} />
+            New Project
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>

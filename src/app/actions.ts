@@ -3,8 +3,14 @@
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import { sendProjectInviteEmail, sendTaskAssignmentEmail } from '@/lib/email';
+import bcrypt from 'bcryptjs';
 
 export async function createProject(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
 
@@ -15,6 +21,12 @@ export async function createProject(formData: FormData) {
       name,
       description,
       status: 'Active',
+      members: {
+        create: {
+          userId: session.user.id,
+          role: 'OWNER'
+        }
+      }
     }
   });
 
@@ -23,7 +35,60 @@ export async function createProject(formData: FormData) {
   redirect(`/projects/${project.id}`);
 }
 
+export async function inviteUserToProject(projectId: string, email: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
+  const project = await db.project.findUnique({ where: { id: projectId } });
+  if (!project) throw new Error('Project not found');
+
+  let user = await db.user.findUnique({ where: { email } });
+  let tempPassword = '';
+
+  if (!user) {
+    tempPassword = Math.random().toString(36).slice(-8) + 'A1!'; // Generate simple strong password
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    
+    user = await db.user.create({
+      data: {
+        email,
+        name: email.split('@')[0],
+        password: hashedPassword,
+      }
+    });
+  }
+
+  // Check if already a member
+  const existingMember = await db.projectMember.findUnique({
+    where: {
+      projectId_userId: { projectId, userId: user.id }
+    }
+  });
+
+  if (existingMember) throw new Error('User is already a member of this project');
+
+  await db.projectMember.create({
+    data: {
+      projectId,
+      userId: user.id,
+      role: 'MEMBER'
+    }
+  });
+
+  try {
+    await sendProjectInviteEmail(email, project.name, tempPassword || undefined);
+  } catch (err) {
+    console.error('Failed to send invite email', err);
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  return { success: true };
+}
+
 export async function createTask(projectId: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
 
@@ -56,11 +121,44 @@ export async function updateTaskStatus(taskId: string, status: string, projectId
   revalidatePath('/');
 }
 
+export async function assignTask(taskId: string, assigneeId: string, projectId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
+  const task = await db.task.update({
+    where: { id: taskId },
+    data: { assigneeId },
+    include: { project: true, assignee: true }
+  });
+
+  if (task.assignee?.email && task.assigneeId !== session.user.id) {
+    try {
+      await sendTaskAssignmentEmail(task.assignee.email, task.title, task.project.name);
+    } catch (err) {
+      console.error('Failed to send assignment email', err);
+    }
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+}
+
 export async function deleteTask(taskId: string, projectId: string) {
   await db.task.delete({
     where: { id: taskId }
   });
   
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/');
+}
+
+export async function deleteProject(projectId: string) {
+  const session = await auth();
+  if (session?.user?.role !== 'Admin') throw new Error('Unauthorized');
+
+  await db.project.delete({
+    where: { id: projectId }
+  });
+  
+  revalidatePath('/admin');
   revalidatePath('/');
 }

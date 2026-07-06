@@ -1,11 +1,23 @@
 import { db } from '@/lib/db';
 import Link from 'next/link';
 import { Plus, Folder } from 'lucide-react';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProjectsPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
+  
+  const userId = session.user.id;
+
   const projects = await db.project.findMany({
+    where: {
+      members: {
+        some: { userId }
+      }
+    },
     orderBy: { createdAt: 'desc' },
     include: {
       tasks: true,
