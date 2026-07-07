@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Calendar, Clock, Trash2, List, LayoutGrid, Search, Filter } from 'lucide-react';
 import AssigneeSelect from './AssigneeSelect';
 import StatusSelect from './StatusSelect';
 import SubmitButton from './SubmitButton';
