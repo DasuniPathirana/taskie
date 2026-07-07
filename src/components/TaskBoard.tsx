@@ -39,6 +39,18 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // Keep selectedTask in sync with server updates (e.g., when a comment is added)
+  React.useEffect(() => {
+    if (selectedTask) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask && updatedTask !== selectedTask) {
+        // Deep compare or just trust the new reference depending on how Next.js passes props.
+        // Actually, since tasks is a new array from the server action, reference check is fine.
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks]);
+
   const columns = ['New', 'InProgress', 'Review', 'Done'];
 
   // Filter tasks
