@@ -16,9 +16,10 @@ model User {
   role      String   @default("Member") // Admin, Member, Viewer
   createdAt DateTime @default(now())
   
-  tasks     Task[]   @relation("TaskAssignee")
-  projects  ProjectMember[]
-  comments  Comment[]
+  tasks        Task[]         @relation("TaskAssignee")
+  projects     ProjectMember[]
+  comments     Comment[]
+  notifications Notification[]
 }
 
 model Project {
@@ -83,5 +84,17 @@ model Comment {
   createdAt DateTime @default(now())
 
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // 'MENTION', 'ASSIGNMENT', 'STATUS'
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?  
+  createdAt DateTime @default(now())
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

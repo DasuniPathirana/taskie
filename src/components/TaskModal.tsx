@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { X, MessageSquare, Clock, Calendar, Send } from 'lucide-react';
+import { X, MessageSquare, Clock, Calendar, Send, CheckSquare, Plus, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { handleAddComment } from '@/app/actions';
+import { handleAddComment, handleAddSubtask, handleToggleSubtask, handleDeleteSubtask } from '@/app/actions';
 import SubmitButton from './SubmitButton';
 
 interface Comment {
@@ -22,6 +22,7 @@ interface TaskModalProps {
 
 export default function TaskModal({ task, onClose, projectId }: TaskModalProps) {
   const [comment, setComment] = useState('');
+  const [subtaskTitle, setSubtaskTitle] = useState('');
   
   // To handle form submission correctly
   const handleSubmit = async (formData: FormData) => {
@@ -72,6 +73,49 @@ export default function TaskModal({ task, onClose, projectId }: TaskModalProps) 
                   <em style={{ opacity: 0.5 }}>No description provided.</em>
                 )}
               </div>
+            </div>
+
+            {/* Subtasks Section */}
+            <div style={{ marginTop: '24px' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckSquare size={18} /> Subtasks
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {task.subtasks?.map((subtask: any) => (
+                  <div key={subtask.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={subtask.isCompleted} 
+                      onChange={() => handleToggleSubtask(subtask.id, projectId, !subtask.isCompleted)}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                    />
+                    <span style={{ flex: 1, fontSize: '0.875rem', textDecoration: subtask.isCompleted ? 'line-through' : 'none', color: subtask.isCompleted ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
+                      {subtask.title}
+                    </span>
+                    <button onClick={() => handleDeleteSubtask(subtask.id, projectId)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.7 }} onMouseOver={e => e.currentTarget.style.opacity = '1'} onMouseOut={e => e.currentTarget.style.opacity = '0.7'}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <form action={async () => {
+                await handleAddSubtask(task.id, projectId, subtaskTitle);
+                setSubtaskTitle('');
+              }} style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  value={subtaskTitle}
+                  onChange={e => setSubtaskTitle(e.target.value)}
+                  placeholder="Add a new subtask..." 
+                  className="input-field" 
+                  style={{ flex: 1, padding: '8px 12px' }}
+                />
+                <SubmitButton variant="primary" style={{ padding: '8px 16px', borderRadius: '8px' }}>
+                  <Plus size={16} /> Add
+                </SubmitButton>
+              </form>
             </div>
 
             {/* Comments Section */}

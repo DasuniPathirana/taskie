@@ -28,6 +28,9 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         orderBy: { createdAt: 'desc' },
         include: { 
           assignee: true,
+          subtasks: {
+            orderBy: { createdAt: 'asc' }
+          },
           comments: {
             include: { user: true },
             orderBy: { createdAt: 'asc' }

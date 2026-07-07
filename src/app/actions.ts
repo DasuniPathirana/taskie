@@ -98,7 +98,7 @@ export async function handleCreateTask(projectId: string, formData: FormData) {
 
   if (!title) throw new Error('Task title is required');
 
-  await db.task.create({
+  const task = await db.task.create({
     data: {
       projectId,
       title,
@@ -113,17 +113,42 @@ export async function handleCreateTask(projectId: string, formData: FormData) {
     }
   });
 
+  if (assigneeId && assigneeId !== session.user.id) {
+    await db.notification.create({
+      data: {
+        userId: assigneeId,
+        type: 'ASSIGNMENT',
+        message: `${session.user.name} assigned you a new task: "${title}".`,
+        link: `/projects/${projectId}?task=${task.id}`
+      }
+    });
+  }
+
   revalidatePath(`/projects/${projectId}`);
 }
 
 export async function handleUpdateTaskStatus(taskId: string, status: string, projectId: string) {
-  await db.task.update({
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
+  const task = await db.task.update({
     where: { id: taskId },
     data: { 
       status,
       progress: status === 'Done' ? 100 : undefined
     }
   });
+
+  if (task.assigneeId && task.assigneeId !== session.user.id) {
+    await db.notification.create({
+      data: {
+        userId: task.assigneeId,
+        type: 'STATUS',
+        message: `Task "${task.title}" status was updated to ${status} by ${session.user.name}.`,
+        link: `/projects/${projectId}?task=${taskId}`
+      }
+    });
+  }
   
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/');
@@ -138,6 +163,17 @@ export async function assignTask(taskId: string, assigneeId: string, projectId: 
     data: { assigneeId },
     include: { project: true, assignee: true }
   });
+
+  if (task.assigneeId && task.assigneeId !== session.user.id) {
+    await db.notification.create({
+      data: {
+        userId: task.assigneeId,
+        type: 'ASSIGNMENT',
+        message: `${session.user.name} assigned you a task: "${task.title}".`,
+        link: `/projects/${projectId}?task=${taskId}`
+      }
+    });
+  }
 
   if (task.assignee?.email && task.assigneeId !== session.user.id) {
     try {
@@ -204,7 +240,7 @@ export async function handleAddComment(taskId: string, projectId: string, formDa
   const content = formData.get('content') as string;
   if (!content) return;
 
-  await db.comment.create({
+  const comment = await db.comment.create({
     data: {
       taskId,
       userId: session.user.id,
@@ -212,5 +248,62 @@ export async function handleAddComment(taskId: string, projectId: string, formDa
     }
   });
 
+  // Parse mentions (e.g., @John Doe or @johndoe)
+  const projectMembers = await db.projectMember.findMany({
+    where: { projectId },
+    include: { user: true }
+  });
+
+  for (const member of projectMembers) {
+    if (member.userId === session.user.id) continue;
+    
+    // Check if the exact name or first name is mentioned
+    const mentionString = `@${member.user.name}`;
+    const mentionFirstName = `@${member.user.name.split(' ')[0]}`;
+    
+    if (content.includes(mentionString) || content.includes(mentionFirstName)) {
+      await db.notification.create({
+        data: {
+          userId: member.userId,
+          type: 'MENTION',
+          message: `${session.user.name} mentioned you in a comment.`,
+          link: `/projects/${projectId}?task=${taskId}`
+        }
+      });
+    }
+  }
+
   revalidatePath(`/projects/${projectId}`);
+}
+
+// Subtask Actions
+export async function handleAddSubtask(taskId: string, projectId: string, title: string) {
+  if (!title) return;
+  await db.subtask.create({
+    data: { taskId, title }
+  });
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function handleToggleSubtask(subtaskId: string, projectId: string, isCompleted: boolean) {
+  await db.subtask.update({
+    where: { id: subtaskId },
+    data: { isCompleted }
+  });
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function handleDeleteSubtask(subtaskId: string, projectId: string) {
+  await db.subtask.delete({
+    where: { id: subtaskId }
+  });
+  revalidatePath(`/projects/${projectId}`);
+}
+
+// Notification Actions
+export async function handleMarkNotificationRead(notificationId: string) {
+  await db.notification.update({
+    where: { id: notificationId },
+    data: { isRead: true }
+  });
 }

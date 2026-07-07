@@ -2,15 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User, Menu, X, CalendarDays, BarChart, Users } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User, Menu, X, CalendarDays, BarChart, Users, Bell } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { signOut } from 'next-auth/react';
+import { handleMarkNotificationRead } from '@/app/actions';
 
-export default function LayoutWrapper({ children, user }: { children: React.ReactNode, user?: any }) {
+export default function LayoutWrapper({ children, user, initialNotifications = [] }: { children: React.ReactNode, user?: any, initialNotifications?: any[] }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Close sidebar on route change
@@ -93,6 +97,54 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
             <button onClick={toggleTheme} className="flex-center" style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+            
+            {user && (
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)} 
+                  className="flex-center" 
+                  style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
+                >
+                  <Bell size={20} />
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--danger)', color: 'white', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {notifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div style={{ 
+                    position: 'absolute', top: '100%', right: 0, marginTop: '12px', width: '320px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', zIndex: 60, padding: '12px', maxHeight: '400px', overflowY: 'auto' 
+                  }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>Notifications</h3>
+                    {notifications.length === 0 ? (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'center', padding: '16px 0' }}>No new notifications</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {notifications.map(n => (
+                          <div 
+                            key={n.id} 
+                            onClick={async () => {
+                              if (!n.isRead) {
+                                setNotifications(prev => prev.map(notif => notif.id === n.id ? { ...notif, isRead: true } : notif));
+                                await handleMarkNotificationRead(n.id);
+                              }
+                              setShowNotifications(false);
+                              if (n.link) router.push(n.link);
+                            }}
+                            style={{ padding: '12px', borderRadius: '8px', background: n.isRead ? 'transparent' : 'var(--bg-base)', border: '1px solid', borderColor: n.isRead ? 'transparent' : 'var(--primary-glow)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px' }}
+                          >
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', textTransform: 'uppercase' }}>{n.type}</span>
+                            <p style={{ fontSize: '0.875rem', margin: 0, color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{n.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             
             {user && (
               <div style={{ position: 'relative' }}>
