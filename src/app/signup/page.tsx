@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 
 export default function Signup() {
@@ -13,6 +13,7 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,15 +96,24 @@ export default function Signup() {
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input input-field"
-              placeholder="Create a strong password"
-              style={{ width: '100%', fontSize: '1rem', letterSpacing: password ? '0.2em' : 'normal' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="auth-input input-field"
+                placeholder={showPassword ? "Create a strong password" : "••••••••"}
+                style={{ width: '100%', fontSize: '1rem', letterSpacing: (password && !showPassword) ? '0.2em' : 'normal', paddingRight: '40px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', display: 'flex' }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
           <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', justifyContent: 'center', marginTop: '16px', padding: '14px', fontSize: '1rem', fontWeight: 600, opacity: isLoading ? 0.7 : 1 }}>
             {isLoading ? 'Creating account...' : 'Create Account'}
