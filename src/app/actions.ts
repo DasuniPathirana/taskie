@@ -277,10 +277,10 @@ export async function handleAddComment(taskId: string, projectId: string, formDa
 }
 
 // Subtask Actions
-export async function handleAddSubtask(taskId: string, projectId: string, title: string) {
+export async function handleAddSubtask(taskId: string, projectId: string, title: string, description?: string) {
   if (!title) return;
   await db.subtask.create({
-    data: { taskId, title }
+    data: { taskId, title, description }
   });
   revalidatePath(`/projects/${projectId}`);
 }

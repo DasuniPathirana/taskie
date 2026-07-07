@@ -17,6 +17,11 @@ export default function LayoutWrapper({ children, user, initialNotifications = [
   const [notifications, setNotifications] = useState(initialNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Sync server-side notifications with local state
+  useEffect(() => {
+    setNotifications(initialNotifications);
+  }, [initialNotifications]);
+
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false);
