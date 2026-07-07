@@ -191,3 +191,21 @@ export async function handleUpdateTaskStatusForm(taskId: string, projectId: stri
     await handleUpdateTaskStatus(taskId, status, projectId);
   }
 }
+
+export async function handleAddComment(taskId: string, projectId: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
+  const content = formData.get('content') as string;
+  if (!content) return;
+
+  await db.comment.create({
+    data: {
+      taskId,
+      userId: session.user.id,
+      content
+    }
+  });
+
+  revalidatePath(`/projects/${projectId}`);
+}

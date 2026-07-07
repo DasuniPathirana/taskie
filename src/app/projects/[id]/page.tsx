@@ -25,7 +25,13 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
       },
       tasks: {
         orderBy: { createdAt: 'desc' },
-        include: { assignee: true }
+        include: { 
+          assignee: true,
+          comments: {
+            include: { user: true },
+            orderBy: { createdAt: 'asc' }
+          }
+        }
       }
     }
   });
@@ -88,11 +94,11 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Description</label>
-              <input 
-                type="text" 
+              <textarea 
                 name="description" 
                 className="input-field" 
-                placeholder="Task description (optional)..."
+                placeholder="Task description (Markdown supported)..."
+                style={{ minHeight: '100px', resize: 'vertical' }}
               />
             </div>
 

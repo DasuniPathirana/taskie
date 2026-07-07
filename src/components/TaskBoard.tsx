@@ -5,6 +5,7 @@ import { Calendar, Clock, Trash2, List, LayoutGrid, Search, Filter } from 'lucid
 import AssigneeSelect from './AssigneeSelect';
 import StatusSelect from './StatusSelect';
 import SubmitButton from './SubmitButton';
+import TaskModal from './TaskModal';
 import { handleUpdateTaskStatus, handleDeleteTask, handleAssignTask, handleUpdateTaskStatusForm } from '@/app/actions';
 
 interface Task {
@@ -36,6 +37,7 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const columns = ['New', 'InProgress', 'Review', 'Done'];
 
@@ -146,24 +148,32 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                   ) : (
                     colTasks.map(task => (
                       <div key={task.id} style={{ background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                        <h4 style={{ fontWeight: 600, marginBottom: '8px' }}>{task.title}</h4>
-                        {task.description && (
-                           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>{task.description}</p>
-                        )}
+                        <div onClick={() => setSelectedTask(task as any)} style={{ cursor: 'pointer' }}>
+                          <h4 style={{ fontWeight: 600, marginBottom: '8px' }}>{task.title}</h4>
+                          {task.description && (
+                             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '12px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{task.description}</p>
+                          )}
 
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          {(task.startDate || task.endDate) && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Calendar size={12} />
-                              {task.startDate ? new Date(task.startDate).toLocaleDateString() : '?'} - {task.endDate ? new Date(task.endDate).toLocaleDateString() : '?'}
-                            </div>
-                          )}
-                          {task.estimatedHours && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Clock size={12} />
-                              {task.estimatedHours}h
-                            </div>
-                          )}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            {(task.startDate || task.endDate) && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Calendar size={12} />
+                                {task.startDate ? new Date(task.startDate).toLocaleDateString() : '?'} - {task.endDate ? new Date(task.endDate).toLocaleDateString() : '?'}
+                              </div>
+                            )}
+                            {task.estimatedHours && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Clock size={12} />
+                                {task.estimatedHours}h
+                              </div>
+                            )}
+                            {/* Comments indicator */}
+                            {(task as any).comments && (task as any).comments.length > 0 && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ fontWeight: 600 }}>{(task as any).comments.length}</span> comments
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div style={{ marginBottom: '12px' }}>
@@ -228,7 +238,7 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
               ) : (
                 filteredTasks.map(task => (
                   <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'var(--transition)' }} className="list-row-hover">
-                    <td style={{ padding: '16px' }}>
+                    <td style={{ padding: '16px', cursor: 'pointer' }} onClick={() => setSelectedTask(task)}>
                       <div style={{ fontWeight: 500 }}>{task.title}</div>
                       {task.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</div>}
                     </td>
@@ -265,6 +275,14 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedTask && (
+        <TaskModal 
+          task={selectedTask} 
+          projectId={projectId} 
+          onClose={() => setSelectedTask(null)} 
+        />
       )}
     </div>
   );
