@@ -5,17 +5,32 @@ import { useFormStatus } from 'react-dom';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-function SubmitButton() {
+function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   
   return (
-    <button type="submit" className="btn-primary" disabled={pending} style={{ marginTop: '24px', width: '100%' }}>
-      {pending ? 'Creating...' : 'Create Project'}
+    <button type="submit" className="btn-primary" disabled={pending || disabled} style={{ marginTop: '24px', width: '100%' }}>
+      {pending || disabled ? 'Creating...' : 'Create Project'}
     </button>
   );
 }
 
+import { useState } from 'react';
+
 export default function NewProject() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAction = async (formData: FormData) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await createProject(formData);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error(error);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px' }}>
@@ -33,7 +48,7 @@ export default function NewProject() {
       </div>
 
       <div className="glass-panel" style={{ padding: '32px' }}>
-        <form action={createProject}>
+        <form action={handleAction}>
           <div style={{ marginBottom: '20px' }}>
             <label htmlFor="name" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.875rem' }}>
               Project Name *
@@ -62,7 +77,7 @@ export default function NewProject() {
             />
           </div>
 
-          <SubmitButton />
+          <SubmitButton disabled={isSubmitting} />
         </form>
       </div>
     </div>
