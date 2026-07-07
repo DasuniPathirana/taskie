@@ -23,14 +23,19 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
     return <div className="app-container">{children}</div>;
   }
 
-  const navItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'My Work', href: '/my-work', icon: CalendarDays },
-    { name: 'Projects', href: '/projects', icon: CheckSquare },
-    { name: 'Analytics', href: '/analytics', icon: BarChart },
-    { name: 'Team', href: '/team', icon: Users },
-    { name: 'Settings', href: '/settings', icon: Settings },
-  ];
+  const navItems = user?.role === 'Admin' 
+    ? [
+        { name: 'Admin Hub', href: '/admin', icon: LayoutDashboard },
+        { name: 'Platform Settings', href: '/admin/settings', icon: Settings },
+      ]
+    : [
+        { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+        { name: 'My Work', href: '/my-work', icon: CalendarDays },
+        { name: 'Projects', href: '/projects', icon: CheckSquare },
+        { name: 'Analytics', href: '/analytics', icon: BarChart },
+        { name: 'Team', href: '/team', icon: Users },
+        { name: 'Settings', href: '/settings', icon: Settings },
+      ];
 
   const getInitials = (name: string) => {
     return name ? name.charAt(0).toUpperCase() : 'U';

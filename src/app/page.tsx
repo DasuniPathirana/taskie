@@ -12,6 +12,8 @@ export default async function Dashboard() {
   
   const userId = session.user.id;
   const isAdmin = session.user.role === 'Admin';
+  
+  if (isAdmin) redirect('/admin');
 
   const userProjects = await db.project.findMany({
     where: {
@@ -56,12 +58,6 @@ export default async function Dashboard() {
           <p className="page-subtitle">Welcome back, {session.user.name || 'User'}! Here's your overview.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {isAdmin && (
-            <Link href="/admin" className="btn-secondary" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', fontWeight: 600, textDecoration: 'none' }}>
-              <Settings size={18} />
-              Super Admin
-            </Link>
-          )}
           <Link href="/projects/new" className="btn-primary">
             <Plus size={18} />
             New Project
