@@ -37,10 +37,10 @@ export async function createProject(formData: FormData) {
 
 export async function inviteUserToProject(projectId: string, email: string) {
   const session = await auth();
-  if (!session?.user?.id) throw new Error('Not authenticated');
+  if (!session?.user?.id) return { error: 'Not authenticated' };
 
   const project = await db.project.findUnique({ where: { id: projectId } });
-  if (!project) throw new Error('Project not found');
+  if (!project) return { error: 'Project not found' };
 
   let user = await db.user.findUnique({ where: { email } });
   let tempPassword = '';
@@ -65,7 +65,7 @@ export async function inviteUserToProject(projectId: string, email: string) {
     }
   });
 
-  if (existingMember) throw new Error('User is already a member of this project');
+  if (existingMember) return { error: 'User is already a member of this project' };
 
   await db.projectMember.create({
     data: {
@@ -174,8 +174,13 @@ export async function deleteProject(projectId: string) {
 export async function handleInviteUser(projectId: string, formData: FormData) {
   const email = formData.get('email') as string;
   if (email) {
-    await inviteUserToProject(projectId, email);
+    try {
+      return await inviteUserToProject(projectId, email);
+    } catch (error: any) {
+      return { error: error.message || 'Failed to invite user' };
+    }
   }
+  return { error: 'Email is required' };
 }
 
 export async function handleAssignTask(taskId: string, projectId: string, formData: FormData) {

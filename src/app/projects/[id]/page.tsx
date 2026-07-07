@@ -1,11 +1,12 @@
 import { db } from '@/lib/db';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2, Users, UserPlus, Calendar, Clock } from 'lucide-react';
-import { handleCreateTask, handleInviteUser } from '@/app/actions';
+import { ArrowLeft, Plus, Users } from 'lucide-react';
+import { handleCreateTask } from '@/app/actions';
 import { auth } from '@/auth';
 import TaskBoard from '@/components/TaskBoard';
 import SubmitButton from '@/components/SubmitButton';
+import InviteForm from '@/components/InviteForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,19 +151,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
           </div>
 
           {isOwnerOrAdmin && (
-            <form action={handleInviteUser.bind(null, project.id)} style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="email" 
-                name="email" 
-                required 
-                className="input-field" 
-                placeholder="Invite by email..."
-                style={{ padding: '8px 12px', flex: 1 }}
-              />
-              <button type="submit" className="btn-primary" style={{ padding: '8px 12px' }}>
-                <UserPlus size={16} />
-              </button>
-            </form>
+            <InviteForm projectId={project.id} />
           )}
         </div>
       </div>
