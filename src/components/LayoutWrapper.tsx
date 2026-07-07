@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Settings, Moon, Sun, LogOut, User, Menu, X, CalendarDays, BarChart, Users } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { signOut } from 'next-auth/react';
 
@@ -25,7 +25,11 @@ export default function LayoutWrapper({ children, user }: { children: React.Reac
 
   const navItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'My Work', href: '/my-work', icon: CalendarDays },
     { name: 'Projects', href: '/projects', icon: CheckSquare },
+    { name: 'Analytics', href: '/analytics', icon: BarChart },
+    { name: 'Team', href: '/team', icon: Users },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   const getInitials = (name: string) => {
