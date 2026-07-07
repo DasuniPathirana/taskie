@@ -195,7 +195,9 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                         </div>
                         
                         <div className="flex-between" style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                          <form action={handleDeleteTask.bind(null, task.id, projectId)}>
+                          <form action={handleDeleteTask.bind(null, task.id, projectId)} onSubmit={(e) => {
+                            if (!window.confirm('Are you sure you want to delete this task?')) e.preventDefault();
+                          }}>
                             <SubmitButton variant="icon" style={{ color: 'var(--danger)', padding: '4px', borderRadius: '4px' }}>
                               <Trash2 size={16} />
                             </SubmitButton>
@@ -275,11 +277,18 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                       {task.estimatedHours ? `${task.estimatedHours}h` : '-'}
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
-                      <form action={handleDeleteTask.bind(null, task.id, projectId)}>
-                        <SubmitButton variant="icon" style={{ color: 'var(--danger)', padding: '8px', borderRadius: '4px' }}>
-                          <Trash2 size={16} />
-                        </SubmitButton>
-                      </form>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <form action={handleDeleteTask.bind(null, task.id, projectId)} onSubmit={(e) => {
+                          if (!window.confirm('Are you sure you want to delete this task?')) e.preventDefault();
+                        }}>
+                          <SubmitButton variant="icon" style={{ color: 'var(--danger)', padding: '8px', borderRadius: '4px', background: 'var(--bg-base)' }}>
+                            <Trash2 size={16} />
+                          </SubmitButton>
+                        </form>
+                        <button onClick={() => setSelectedTask(task as any)} style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>
+                          View Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

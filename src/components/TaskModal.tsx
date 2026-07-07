@@ -101,7 +101,11 @@ export default function TaskModal({ task, onClose, projectId }: TaskModalProps) 
                         </span>
                       )}
                     </div>
-                    <button onClick={() => handleDeleteSubtask(subtask.id, projectId)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.7 }} onMouseOver={e => e.currentTarget.style.opacity = '1'} onMouseOut={e => e.currentTarget.style.opacity = '0.7'}>
+                    <button onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this subtask?')) {
+                        handleDeleteSubtask(subtask.id, projectId);
+                      }
+                    }} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.7 }} onMouseOver={e => e.currentTarget.style.opacity = '1'} onMouseOut={e => e.currentTarget.style.opacity = '0.7'}>
                       <Trash2 size={16} />
                     </button>
                   </div>

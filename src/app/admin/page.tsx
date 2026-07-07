@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { Users, Folder, Trash2, Shield, Activity, Target, CheckCircle2 } from 'lucide-react';
 import { auth } from '@/auth';
-import { deleteProject } from '@/app/actions';
+import DeleteProjectForm from '@/components/DeleteProjectForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -166,11 +166,7 @@ export default async function AdminDashboard() {
                               {pm.role}
                             </div>
                           </div>
-                          <form action={deleteProject.bind(null, project.id)}>
-                            <button type="submit" style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Workspace">
-                              <Trash2 size={18} />
-                            </button>
-                          </form>
+                          <DeleteProjectForm projectId={project.id} />
                         </div>
                         
                         <div style={{ marginBottom: '16px' }}>
