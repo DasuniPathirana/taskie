@@ -2,9 +2,9 @@ import { db } from '@/lib/db';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, Users, UserPlus, Calendar, Clock } from 'lucide-react';
-import { handleCreateTask, handleUpdateTaskStatus, handleDeleteTask, handleInviteUser, handleAssignTask } from '@/app/actions';
+import { handleCreateTask, handleInviteUser } from '@/app/actions';
 import { auth } from '@/auth';
-import AssigneeSelect from '@/components/AssigneeSelect';
+import TaskBoard from '@/components/TaskBoard';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +36,6 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   const currentUserRole = project.members.find(m => m.userId === userId)?.role || 'MEMBER';
   const isOwnerOrAdmin = currentUserRole === 'OWNER' || session.user.role === 'Admin';
-
-  const columns = ['New', 'InProgress', 'Review', 'Done'];
 
   return (
     <div className="animate-fade-in">
@@ -162,84 +160,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div style={{ display: 'flex', gap: '24px', overflowX: 'auto', paddingBottom: '16px' }}>
-        {columns.map(col => {
-          const colTasks = project.tasks.filter(t => t.status === col);
-          
-          return (
-            <div key={col} style={{ flex: '1', minWidth: '320px', background: 'var(--bg-surface-glass)', borderRadius: 'var(--radius-lg)', padding: '16px', border: '1px solid var(--border-color)' }}>
-              <div className="flex-between" style={{ marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
-                <h3 style={{ fontWeight: 600 }}>{col === 'InProgress' ? 'In Progress' : col}</h3>
-                <span className="badge" style={{ background: 'var(--bg-base)', color: 'var(--text-secondary)' }}>{colTasks.length}</span>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {colTasks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
-                    No tasks here
-                  </div>
-                ) : (
-                  colTasks.map(task => (
-                    <div key={task.id} style={{ background: 'var(--bg-surface)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                      <h4 style={{ fontWeight: 600, marginBottom: '8px' }}>{task.title}</h4>
-                      {task.description && (
-                         <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>{task.description}</p>
-                      )}
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {(task.startDate || task.endDate) && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Calendar size={12} />
-                            {task.startDate ? new Date(task.startDate).toLocaleDateString() : '?'} - {task.endDate ? new Date(task.endDate).toLocaleDateString() : '?'}
-                          </div>
-                        )}
-                        {task.estimatedHours && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Clock size={12} />
-                            {task.estimatedHours}h
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ marginBottom: '12px' }}>
-                        <form action={handleAssignTask.bind(null, task.id, project.id)}>
-                          <AssigneeSelect defaultValue={task.assigneeId || ''} members={project.members} />
-                        </form>
-                      </div>
-                      
-                      <div className="flex-between" style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                        <form action={handleDeleteTask.bind(null, task.id, project.id)}>
-                          <button type="submit" style={{ color: 'var(--danger)', padding: '4px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                            <Trash2 size={16} />
-                          </button>
-                        </form>
-                        
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {col !== 'New' && (
-                            <form action={handleUpdateTaskStatus.bind(null, task.id, columns[columns.indexOf(col) - 1], project.id)}>
-                              <button type="submit" className="badge" style={{ background: 'var(--bg-base)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
-                                Prev
-                              </button>
-                            </form>
-                          )}
-                          {col !== 'Done' && (
-                            <form action={handleUpdateTaskStatus.bind(null, task.id, columns[columns.indexOf(col) + 1], project.id)}>
-                              <button type="submit" className="badge badge-primary" style={{ cursor: 'pointer', border: 'none' }}>
-                                Next
-                              </button>
-                            </form>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <TaskBoard tasks={project.tasks} members={project.members} projectId={project.id} />
     </div>
   );
 }
