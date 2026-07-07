@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Trash2, Users, UserPlus, Calendar, Clock } from 'lucid
 import { handleCreateTask, handleInviteUser } from '@/app/actions';
 import { auth } from '@/auth';
 import TaskBoard from '@/components/TaskBoard';
+import SubmitButton from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,10 +112,10 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-              <button type="submit" className="btn-primary">
+              <SubmitButton variant="primary">
                 <Plus size={18} />
                 Add Task
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </div>

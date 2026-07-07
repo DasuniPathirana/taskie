@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Clock, Trash2, List, LayoutGrid, Search, Filter } from 'lucide-react';
 import AssigneeSelect from './AssigneeSelect';
-import { handleUpdateTaskStatus, handleDeleteTask, handleAssignTask } from '@/app/actions';
+import StatusSelect from './StatusSelect';
+import SubmitButton from './SubmitButton';
+import { handleUpdateTaskStatus, handleDeleteTask, handleAssignTask, handleUpdateTaskStatusForm } from '@/app/actions';
 
 interface Task {
   id: string;
@@ -172,24 +173,24 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                         
                         <div className="flex-between" style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                           <form action={handleDeleteTask.bind(null, task.id, projectId)}>
-                            <button type="submit" style={{ color: 'var(--danger)', padding: '4px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                            <SubmitButton variant="icon" style={{ color: 'var(--danger)', padding: '4px', borderRadius: '4px' }}>
                               <Trash2 size={16} />
-                            </button>
+                            </SubmitButton>
                           </form>
                           
                           <div style={{ display: 'flex', gap: '8px' }}>
                             {col !== 'New' && (
                               <form action={handleUpdateTaskStatus.bind(null, task.id, columns[columns.indexOf(col) - 1], projectId)}>
-                                <button type="submit" className="badge" style={{ background: 'var(--bg-base)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                                <SubmitButton variant="ghost" className="badge" style={{ background: 'var(--bg-base)', border: '1px solid var(--border-color)' }}>
                                   Prev
-                                </button>
+                                </SubmitButton>
                               </form>
                             )}
                             {col !== 'Done' && (
                               <form action={handleUpdateTaskStatus.bind(null, task.id, columns[columns.indexOf(col) + 1], projectId)}>
-                                <button type="submit" className="badge badge-primary" style={{ cursor: 'pointer', border: 'none' }}>
+                                <SubmitButton variant="ghost" className="badge badge-primary" style={{ border: 'none' }}>
                                   Next
-                                </button>
+                                </SubmitButton>
                               </form>
                             )}
                           </div>
@@ -231,9 +232,9 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                       {task.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</div>}
                     </td>
                     <td style={{ padding: '16px' }}>
-                      <span className={`badge ${task.status === 'Done' ? 'badge-success' : task.status === 'InProgress' ? 'badge-primary' : 'badge-warning'}`}>
-                        {task.status === 'InProgress' ? 'In Progress' : task.status}
-                      </span>
+                      <form action={handleUpdateTaskStatusForm.bind(null, task.id, projectId)}>
+                        <StatusSelect defaultValue={task.status} />
+                      </form>
                     </td>
                     <td style={{ padding: '16px' }}>
                       <form action={handleAssignTask.bind(null, task.id, projectId)}>
@@ -252,9 +253,9 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
                       <form action={handleDeleteTask.bind(null, task.id, projectId)}>
-                        <button type="submit" style={{ color: 'var(--danger)', padding: '8px', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                        <SubmitButton variant="icon" style={{ color: 'var(--danger)', padding: '8px', borderRadius: '4px' }}>
                           <Trash2 size={16} />
-                        </button>
+                        </SubmitButton>
                       </form>
                     </td>
                   </tr>

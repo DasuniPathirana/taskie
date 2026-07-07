@@ -184,3 +184,10 @@ export async function handleAssignTask(taskId: string, projectId: string, formDa
     await assignTask(taskId, assigneeId, projectId);
   }
 }
+
+export async function handleUpdateTaskStatusForm(taskId: string, projectId: string, formData: FormData) {
+  const status = formData.get('status') as string;
+  if (status) {
+    await handleUpdateTaskStatus(taskId, status, projectId);
+  }
+}
