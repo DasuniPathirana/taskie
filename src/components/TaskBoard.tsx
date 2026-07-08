@@ -6,7 +6,7 @@ import AssigneeSelect from './AssigneeSelect';
 import StatusSelect from './StatusSelect';
 import SubmitButton from './SubmitButton';
 import TaskModal from './TaskModal';
-import { handleUpdateTaskStatus, handleDeleteTask, handleAssignTask, handleUpdateTaskStatusForm } from '@/app/actions';
+import { handleUpdateTaskStatus, handleDeleteTask, handleAssignTask, handleUpdateTaskStatusForm, handleToggleSubtask, handleDeleteSubtask, handleAddSubtask } from '@/app/actions';
 
 interface Task {
   id: string;
@@ -18,6 +18,7 @@ interface Task {
   endDate: Date | null;
   estimatedHours: number | null;
   assignee: { name: string } | null;
+  subtasks?: any[];
 }
 
 interface Member {
@@ -33,7 +34,7 @@ interface TaskBoardProps {
 }
 
 export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps) {
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
@@ -252,9 +253,14 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
               ) : (
                 filteredTasks.map(task => (
                   <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'var(--transition)' }} className="list-row-hover">
-                    <td style={{ padding: '16px', cursor: 'pointer' }} onClick={() => setSelectedTask(task)}>
-                      <div style={{ fontWeight: 500 }}>{task.title}</div>
-                      {task.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</div>}
+                    <td style={{ padding: '16px' }}>
+                      <div onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', display: 'inline-block' }}>
+                        <div style={{ fontWeight: 500 }}>{task.title}</div>
+                        {task.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.description}</div>}
+                      </div>
+                      
+                      {/* Nested Subtasks */}
+                      <InlineSubtasks task={task} projectId={projectId} />
                     </td>
                     <td style={{ padding: '16px' }}>
                       <form action={handleUpdateTaskStatusForm.bind(null, task.id, projectId)}>
@@ -305,6 +311,85 @@ export default function TaskBoard({ tasks, members, projectId }: TaskBoardProps)
           onClose={() => setSelectedTask(null)} 
         />
       )}
+    </div>
+  );
+}
+
+// Inline component for rendering subtasks within the list view
+function InlineSubtasks({ task, projectId }: { task: Task, projectId: string }) {
+  const [subtaskTitle, setSubtaskTitle] = useState('');
+  const [subtaskDescription, setSubtaskDescription] = useState('');
+  
+  return (
+    <div style={{ marginTop: '12px', paddingLeft: '8px', borderLeft: '2px solid var(--border-color)' }}>
+      {task.subtasks && task.subtasks.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+          {task.subtasks.map((subtask: any) => (
+            <div key={subtask.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.875rem' }}>
+              <input 
+                type="checkbox" 
+                checked={subtask.isCompleted} 
+                onChange={() => handleToggleSubtask(subtask.id, projectId, !subtask.isCompleted)}
+                style={{ width: '14px', height: '14px', marginTop: '3px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+              />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ fontWeight: 500, textDecoration: subtask.isCompleted ? 'line-through' : 'none', color: subtask.isCompleted ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
+                  {subtask.title}
+                </span>
+                {subtask.description && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textDecoration: subtask.isCompleted ? 'line-through' : 'none' }}>
+                    {subtask.description}
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (window.confirm('Are you sure you want to delete this subtask?')) {
+                    handleDeleteSubtask(subtask.id, projectId);
+                  }
+                }} 
+                style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.5 }}
+                onMouseOver={e => e.currentTarget.style.opacity = '1'} 
+                onMouseOut={e => e.currentTarget.style.opacity = '0.5'}
+                title="Delete subtask"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <form action={async () => {
+        await handleAddSubtask(task.id, projectId, subtaskTitle, subtaskDescription);
+        setSubtaskTitle('');
+        setSubtaskDescription('');
+      }} style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '300px' }}>
+        <input 
+          type="text" 
+          value={subtaskTitle}
+          onChange={e => setSubtaskTitle(e.target.value)}
+          placeholder="Add subtask..." 
+          className="input-field" 
+          style={{ padding: '4px 8px', fontSize: '0.875rem', height: '28px' }}
+        />
+        {subtaskTitle && (
+          <input 
+            type="text" 
+            value={subtaskDescription}
+            onChange={e => setSubtaskDescription(e.target.value)}
+            placeholder="Description (optional)" 
+            className="input-field" 
+            style={{ padding: '4px 8px', fontSize: '0.75rem', height: '24px' }}
+          />
+        )}
+        {subtaskTitle && (
+           <SubmitButton variant="primary" style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: '4px', alignSelf: 'flex-start', marginTop: '2px', height: '24px' }}>
+             Add
+           </SubmitButton>
+        )}
+      </form>
     </div>
   );
 }
